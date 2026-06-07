@@ -78,12 +78,20 @@ button:hover {
   font-size: 16px;
 }
 
-.summary-canvas {
+.summary-scroll {
   width: min(780px, 92vw);
-  height: auto;
+  max-height: min(360px, 38vh);
   margin: 8px auto 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 3px solid rgba(255, 255, 255, 0.8);
   border-radius: 8px;
+  background: #f7fbff;
+}
+
+.summary-canvas {
+  width: 100%;
+  height: auto;
   background: #f7fbff;
 }
 

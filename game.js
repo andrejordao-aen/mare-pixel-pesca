@@ -550,18 +550,27 @@ function checkBigFishBaitCollision(timestamp) {
   if (!bigFish) return;
 
   const baitName = carriedItem.baseName || carriedItem.name;
-  const escapeChance = bigFishEscapeChanceByBait[baitName] || 0.8;
+  const baitWasShiny = Boolean(carriedItem.isShiny);
+  const escapeChance = baitWasShiny ? 0 : bigFishEscapeChanceByBait[baitName] || 0.8;
 
   carriedItem = {
     ...bigFish,
     baitName,
+    baitWasShiny,
     escapeChance,
     hookedAt: timestamp,
-    escapeAt: timestamp + randomBetween(config.bigFishEscapeDelayMin, config.bigFishEscapeDelayMax),
-    finalEscapeChance: Math.min(0.98, escapeChance + config.bigFishFinalEscapeBonus)
+    escapeAt: baitWasShiny
+      ? Number.POSITIVE_INFINITY
+      : timestamp + randomBetween(config.bigFishEscapeDelayMin, config.bigFishEscapeDelayMax),
+    finalEscapeChance: baitWasShiny ? 0 : Math.min(0.98, escapeChance + config.bigFishFinalEscapeBonus)
   };
   items = items.filter((item) => item !== bigFish);
-  showStatus(`Peixe grande mordeu o isco: ${baitName}!`);
+
+  if (baitWasShiny) {
+    showStatus(`Peixe grande mordeu ${baitName} shiny: captura garantida!`);
+  } else {
+    showStatus(`Peixe grande mordeu o isco: ${baitName}!`);
+  }
 }
 
 // Recolhe o objeto quando chega a linha da agua e atualiza pontuacao/contadores.

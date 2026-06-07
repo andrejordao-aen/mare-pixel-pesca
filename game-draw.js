@@ -284,6 +284,12 @@ function drawText(text, x, y, size, color, weight = "normal") {
 function drawFinalSummary(summaryItems) {
   const summaryCanvas = document.getElementById("summaryCanvas");
   const summaryCtx = summaryCanvas.getContext("2d");
+  const rowHeight = 44;
+  const headerHeight = 64;
+  const bottomPadding = 28;
+  const neededHeight = headerHeight + Math.max(summaryItems.length, 1) * rowHeight + bottomPadding;
+
+  summaryCanvas.height = Math.max(140, neededHeight);
 
   summaryCtx.clearRect(0, 0, summaryCanvas.width, summaryCanvas.height);
   summaryCtx.fillStyle = "#f7fbff";
@@ -296,12 +302,11 @@ function drawFinalSummary(summaryItems) {
   if (summaryItems.length === 0) {
     summaryCtx.font = "18px Arial";
     summaryCtx.fillText("Ainda nao foi recolhido nenhum peixe, lixo ou perigo.", 24, 86);
-    window.ctx = oldCtx;
     return;
   }
 
   summaryItems.forEach((item, index) => {
-    const rowY = 64 + index * 44;
+    const rowY = headerHeight + index * rowHeight;
     const icon = {
       ...item,
       x: 28,
