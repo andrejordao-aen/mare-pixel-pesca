@@ -55,11 +55,13 @@ Edit `game-config.js` to change points, speeds, probabilities, shiny rarity, dif
 - `game.js`: game rules, movement, collisions, scoring and final summary data.
 - `game-draw.js`: temporary Canvas drawings and final summary drawing.
 
-## Student art placeholders
+## Student art
 
-The game currently draws temporary placeholder art with Canvas.
+The game tries to use student PNG files from the `assets` folder.
 
-Students can later create pixel-art files in the `assets` folder using names like:
+If a matching PNG exists, the game draws that image. If it does not exist, the game uses the temporary Canvas placeholder, so the project never breaks.
+
+Students can create pixel-art files in the `assets` folder using these exact names:
 
 - `fisherman.png`
 - `cliffs.png`
@@ -73,3 +75,10 @@ Students can later create pixel-art files in the `assets` folder using names lik
 - `alforreca.png`
 - `garrafa.png`
 - `bota.png`
+
+Recommended art rules:
+
+- Use PNG files.
+- Transparent background is best.
+- Draw fish facing right. The game flips them automatically when they swim left.
+- Use simple file names with no spaces or accents.

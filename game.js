@@ -802,6 +802,10 @@ function drawSea() {
 
 // Desenha as arribas/rochas temporarias.
 function drawCliffs() {
+  if (drawSceneArtIfReady("cliffs.png", 18, 154, 1142, 140)) {
+    return;
+  }
+
   ctx.fillStyle = "#ffd34d";
   ctx.fillRect(18, 194, 430, 96);
   ctx.fillRect(660, 194, 500, 96);
@@ -816,18 +820,19 @@ function drawCliffs() {
 
 // Desenha o pescador temporario.
 function drawFishermanPlaceholder() {
-  // Placeholder: students can replace this with assets/fisherman.png later.
-  ctx.fillStyle = "#62c462";
-  ctx.beginPath();
-  ctx.moveTo(715, 12);
-  ctx.lineTo(798, 92);
-  ctx.lineTo(766, 196);
-  ctx.lineTo(666, 196);
-  ctx.lineTo(634, 92);
-  ctx.closePath();
-  ctx.fill();
+  if (!drawSceneArtIfReady("fisherman.png", 624, 6, 190, 190)) {
+    ctx.fillStyle = "#62c462";
+    ctx.beginPath();
+    ctx.moveTo(715, 12);
+    ctx.lineTo(798, 92);
+    ctx.lineTo(766, 196);
+    ctx.lineTo(666, 196);
+    ctx.lineTo(634, 92);
+    ctx.closePath();
+    ctx.fill();
 
-  drawText("Pescador", 668, 124, 24, "#111111", "bold");
+    drawText("Pescador", 668, 124, 24, "#111111", "bold");
+  }
 
   ctx.strokeStyle = "#7330e8";
   ctx.lineWidth = 12;

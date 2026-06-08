@@ -9,12 +9,80 @@
   O ficheiro game.js chama estas funcoes, mas a logica do jogo fica la.
 */
 
+// Liga cada objeto do jogo ao ficheiro PNG que os alunos podem colocar em assets.
+const artFileByName = {
+  Sardinha: "sardinha.png",
+  Carapau: "carapau.png",
+  Robalo: "robalo.png",
+  Polvo: "polvo.png",
+  Lula: "lula.png",
+  "Peixe grande": "peixe_grande.png",
+  Tubarao: "tubarao.png",
+  Alforreca: "alforreca.png",
+  Garrafa: "garrafa.png",
+  "Bota velha": "bota.png"
+};
+
+// Cache simples das imagens. Cada ficheiro e carregado uma vez no inicio.
+const loadedArtImages = {};
+
+loadStudentArtImages();
+
+/*
+  Tenta carregar todos os PNG esperados.
+  Se algum ficheiro nao existir, o jogo continua normal e usa placeholders.
+*/
+function loadStudentArtImages() {
+  const fileNames = new Set([
+    "fisherman.png",
+    "cliffs.png",
+    ...Object.values(artFileByName)
+  ]);
+
+  fileNames.forEach((fileName) => {
+    const image = new Image();
+
+    image.loaded = false;
+    image.failed = false;
+    image.onload = () => {
+      image.loaded = true;
+    };
+    image.onerror = () => {
+      image.failed = true;
+    };
+    image.src = `assets/${fileName}`;
+
+    loadedArtImages[fileName] = image;
+  });
+}
+
+// Diz se uma imagem existe e ja esta pronta para desenhar.
+function getLoadedArtImage(fileName) {
+  const image = loadedArtImages[fileName];
+
+  if (!image || image.failed || !image.loaded || image.naturalWidth === 0) {
+    return null;
+  }
+
+  return image;
+}
+
+// Devolve o ficheiro de arte para um item, incluindo shinies pelo nome base.
+function getItemArtFile(item) {
+  const baseName = item.baseName || item.name.replace(" shiny", "");
+  return artFileByName[baseName] || null;
+}
+
 /*
   Decide qual desenho usar para cada objeto.
   "caughtOnHook" desenha os peixes na vertical quando estao presos no anzol.
 */
 function drawItem(item, showLabel = true, caughtOnHook = false) {
-  if (item.name.includes("Lula") || item.baseName === "Lula") {
+  const assetWasDrawn = drawItemArtIfReady(item, caughtOnHook);
+
+  if (assetWasDrawn) {
+    // A imagem do aluno substitui o placeholder.
+  } else if (item.name.includes("Lula") || item.baseName === "Lula") {
     drawSquidPlaceholder(item, caughtOnHook);
   } else if (caughtOnHook && (item.kind === "fish" || item.kind === "bigFish")) {
     drawCaughtFishPlaceholder(item);
@@ -37,6 +105,74 @@ function drawItem(item, showLabel = true, caughtOnHook = false) {
       drawText("x4", item.x + item.width - 22, item.y + item.height + 14, 16, "#7a1cff", "bold");
     }
   }
+}
+
+/*
+  Desenha uma imagem do aluno se ela existir.
+  Peixes no anzol rodam para ficar de cabeca para cima.
+  Peixes shiny usam filtro invertido para manter o efeito "negativo".
+*/
+function drawItemArtIfReady(item, caughtOnHook = false) {
+  const fileName = getItemArtFile(item);
+  const image = fileName ? getLoadedArtImage(fileName) : null;
+
+  if (!image) return false;
+
+  const shouldRotateOnHook =
+    caughtOnHook && (item.kind === "fish" || item.kind === "bigFish" || item.baseName === "Lula" || item.name.includes("Lula"));
+
+  drawArtImage(image, {
+    drawCtx: ctx,
+    x: item.x,
+    y: item.y,
+    width: item.width,
+    height: item.height,
+    flipX: !caughtOnHook && item.direction === -1,
+    rotation: shouldRotateOnHook ? -Math.PI / 2 : 0,
+    invert: Boolean(item.isShiny)
+  });
+
+  return true;
+}
+
+/*
+  Desenha uma imagem de cenario por nome de ficheiro.
+  Usado para fisherman.png e cliffs.png.
+*/
+function drawSceneArtIfReady(fileName, x, y, width, height) {
+  const image = getLoadedArtImage(fileName);
+
+  if (!image) return false;
+
+  drawArtImage(image, {
+    drawCtx: ctx,
+    x,
+    y,
+    width,
+    height
+  });
+
+  return true;
+}
+
+// Funcao comum para desenhar PNGs com escala, flip, rotacao e filtro shiny.
+function drawArtImage(image, options) {
+  const drawCtx = options.drawCtx;
+  const centerX = options.x + options.width / 2;
+  const centerY = options.y + options.height / 2;
+
+  drawCtx.save();
+  drawCtx.imageSmoothingEnabled = false;
+
+  if (options.invert) {
+    drawCtx.filter = "invert(1)";
+  }
+
+  drawCtx.translate(centerX, centerY);
+  drawCtx.rotate(options.rotation || 0);
+  drawCtx.scale(options.flipX ? -1 : 1, 1);
+  drawCtx.drawImage(image, -options.width / 2, -options.height / 2, options.width, options.height);
+  drawCtx.restore();
 }
 
 // Desenho temporario de peixe normal a nadar de lado.
@@ -329,6 +465,28 @@ function drawFinalSummary(summaryItems) {
 
 // Versao compacta dos desenhos para o canvas do resumo final.
 function drawSummaryIcon(summaryCtx, item) {
+  const fileName = getItemArtFile(item);
+  const image = fileName ? getLoadedArtImage(fileName) : null;
+
+  if (image) {
+    drawArtImage(image, {
+      drawCtx: summaryCtx,
+      x: item.x,
+      y: item.y,
+      width: item.width,
+      height: item.height,
+      invert: Boolean(item.isShiny)
+    });
+
+    if (item.isShiny) {
+      summaryCtx.fillStyle = "#7a1cff";
+      summaryCtx.font = "bold 12px Arial";
+      summaryCtx.fillText("x4", item.x + item.width - 18, item.y + item.height + 8);
+    }
+
+    return;
+  }
+
   summaryCtx.fillStyle = item.color;
 
   if (item.kind === "trash") {
