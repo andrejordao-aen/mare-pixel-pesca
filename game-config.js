@@ -111,8 +111,8 @@ window.GAME_CONFIG = {
       shinyChance: 0.5,
       width: 72,
       height: 44,
-      speedMin: 1.4,
-      speedMax: 3.4
+      speedMin: 3,
+      speedMax: 6
     }
   ],
 
@@ -128,8 +128,8 @@ window.GAME_CONFIG = {
     shinyChance: 0.5,
     width: 150,
     height: 64,
-    speedMin: 0.5,
-    speedMax: 0.9
+    speedMin: 3,
+    speedMax: 4
   },
 
   // ------------------------------
@@ -152,7 +152,7 @@ window.GAME_CONFIG = {
     kind: "sharkHazard",
     points: 0,
     color: "#37516c",
-    chance: 34,
+    chance: 80,
     width: 260,
     height: 110,
     speedMin: 13,
@@ -165,7 +165,7 @@ window.GAME_CONFIG = {
       kind: "trash",
       points: -10,
       color: "#45b36a",
-      chance: 7,
+      chance: 32,
       width: 54,
       height: 34,
       speedMin: 1.2,
@@ -176,7 +176,7 @@ window.GAME_CONFIG = {
       kind: "trash",
       points: -20,
       color: "#9b671f",
-      chance: 5,
+      chance: 32,
       width: 64,
       height: 44,
       speedMin: 1.2,
