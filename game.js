@@ -282,11 +282,13 @@ function updateSpecialItemMovement(item, timestamp) {
 
   if (item.kind !== "bigFish") return;
 
-  if (item.fleeUntil && timestamp >= item.fleeUntil) {
-    item.direction = item.returnDirection;
-    item.speed = randomBetween(bigFishType.speedMin, bigFishType.speedMax);
-    item.fleeUntil = 0;
-    item.returnDirection = 0;
+  if (item.escapeVelocityY) {
+    item.y += item.escapeVelocityY;
+
+    if (item.y < seaTop + 50 || item.y + item.height > canvas.height - 34) {
+      item.y = clamp(item.y, seaTop + 50, canvas.height - item.height - 34);
+      item.escapeVelocityY *= -0.65;
+    }
   }
 
   if (item.x < 30) {
@@ -322,13 +324,15 @@ function spawnItem() {
   const direction = Math.random() > 0.5 ? 1 : -1;
   const x = direction === 1 ? -90 : canvas.width + 90;
   const y = getSpawnY(type);
+  const speed = randomBetween(type.speedMin || 1.2, type.speedMax || 3.1);
 
   items.push({
     ...type,
     x,
     y,
     direction,
-    speed: randomBetween(type.speedMin || 1.2, type.speedMax || 3.1),
+    speed,
+    baseSpeed: speed,
     swimOffset: Math.random() * Math.PI * 2
   });
 
@@ -413,7 +417,7 @@ function chooseItemType() {
   o proximo spawn cria obrigatoriamente o peixe grande.
 */
 function shouldForceBigFishSpawn(timestamp) {
-  if (bigFishHasSpawned || bigFishCaught) return false;
+  if (bigFishHasSpawned) return false;
   if (score <= bigFishUnlockScore) return false;
 
   const elapsedSeconds = Math.floor((timestamp - gameStartTime) / 1000);
@@ -525,7 +529,13 @@ function checkSharkStealCollision(timestamp) {
   if (!shark) return;
 
   const eatenName = carriedItem.name;
+  const eatenKind = carriedItem.kind;
   carriedItem = null;
+
+  if (eatenKind === "bigFish") {
+    bigFishHasSpawned = false;
+  }
+
   shark.justAteUntil = timestamp + 800;
   showStatus(`O Tubarao comeu ${eatenName}!`);
 }
@@ -584,6 +594,7 @@ function collectCarriedItem() {
   } else if (carriedItem.kind === "bigFish") {
     caughtCounts["Peixe grande"] = (caughtCounts["Peixe grande"] || 0) + 1;
     bigFishCaught = true;
+    bigFishHasSpawned = false;
     showStatus("Peixe grande capturado! Grande pesca!");
   }
 
@@ -598,7 +609,7 @@ function triggerShock(item, timestamp) {
   recordCatch(item);
 
   if (carriedItem && carriedItem.kind === "bigFish") {
-    releaseBigFishToSea(carriedItem, timestamp, "A alforreca assustou o peixe grande!");
+    releaseBigFishToSea(carriedItem, "A alforreca assustou o peixe grande!");
   } else {
     carriedItem = null;
   }
@@ -633,7 +644,7 @@ function recordCatch(item) {
 // Primeira tentativa de fuga do peixe grande depois de morder o isco.
 function tryBigFishEscape(bigFish, timestamp) {
   if (Math.random() < bigFish.escapeChance) {
-    releaseBigFishToSea(bigFish, timestamp, `O peixe grande largou o anzol! Isco: ${bigFish.baitName}.`);
+    releaseBigFishToSea(bigFish, `O peixe grande largou o anzol! Isco: ${bigFish.baitName}.`);
     return;
   }
 
@@ -644,7 +655,7 @@ function tryBigFishEscape(bigFish, timestamp) {
 // Segunda tentativa de fuga do peixe grande mesmo antes de ser recolhido.
 function tryBigFishFinalEscape(bigFish, timestamp) {
   if (Math.random() < bigFish.finalEscapeChance) {
-    releaseBigFishToSea(bigFish, timestamp, "O peixe grande escapou mesmo à beira da água!");
+    releaseBigFishToSea(bigFish, "O peixe grande escapou mesmo à beira da água!");
     return true;
   }
 
@@ -653,21 +664,26 @@ function tryBigFishFinalEscape(bigFish, timestamp) {
 
 /*
   Devolve o peixe grande ao mar quando ele escapa.
-  Ele nasce perto do anzol, foge rapido um pouco, e depois volta ao ritmo lento.
+  Ele volta perto do anzol, escolhe uma direcao horizontal,
+  continua com a velocidade base dele e ganha uma deriva vertical.
 */
-function releaseBigFishToSea(bigFish, timestamp, message) {
-  const escapeDirection = bigFish.direction ? -bigFish.direction : -1;
-  const returnDirection = bigFish.direction || 1;
+function releaseBigFishToSea(bigFish, message) {
+  const escapeDirection = Math.random() > 0.5 ? 1 : -1;
+  const verticalDirection = Math.random() < 0.75 ? 1 : -1;
+  const escapeY = hookY + randomBetween(18, 120);
+  const escapeSpeed = bigFish.baseSpeed || bigFish.speed || randomBetween(bigFishType.speedMin, bigFishType.speedMax);
 
   items.push({
     ...bigFish,
-    x: hookX - bigFish.width / 2,
-    y: clamp(hookY + 42, seaTop + 60, canvas.height - 110),
+    x: hookX - bigFish.width / 2 + escapeDirection * 14,
+    y: clamp(escapeY, seaTop + 50, canvas.height - bigFish.height - 34),
     direction: escapeDirection,
-    speed: config.bigFishFleeSpeed,
+    speed: escapeSpeed,
+    baseSpeed: escapeSpeed,
     swimOffset: Math.random() * Math.PI * 2,
-    fleeUntil: timestamp + config.bigFishFleeDuration,
-    returnDirection,
+    escapeVelocityY: verticalDirection * randomBetween(0.2, 0.75),
+    fleeUntil: 0,
+    returnDirection: 0,
     escapeAt: 0,
     finalEscapeChance: 0
   });
