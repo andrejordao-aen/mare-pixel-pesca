@@ -140,7 +140,7 @@ window.GAME_CONFIG = {
     kind: "danger",
     points: -20,
     color: "#ef4a3d",
-    chance: 12,
+    chance: 80,
     width: 76,
     height: 52,
     speedMin: 1.2,
@@ -192,19 +192,19 @@ window.GAME_CONFIG = {
       name: "Mar calmo",
       startsAt: 0,
       spawnDelay: 1050,
-      weights: { fish: 88, trash: 9, danger: 3 }
+      weights: { fish: 60, trash: 25, danger: 15 }
     },
     {
       name: "Mar sujo",
       startsAt: 40,
       spawnDelay: 900,
-      weights: { fish: 66, trash: 24, danger: 10 }
+      weights: { fish: 40, trash: 35, danger: 25 }
     },
     {
       name: "Mar perigoso",
       startsAt: 80,
       spawnDelay: 760,
-      weights: { fish: 44, trash: 34, danger: 22 }
+      weights: { fish: 20, trash: 40, danger: 40 }
     }
   ],
 
